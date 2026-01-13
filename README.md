@@ -7,5 +7,4 @@ Explained :
 
 
 # Preview :
-![Preview Result]
-(https://raw.githubusercontent.com/tfbarrr/Economy-leaderboard/main/Screenshot_20260113-143740.jpg)
+![Preview Result](https://raw.githubusercontent.com/tfbarrr/Economy-leaderboard/main/Screenshot_20260113-143740.jpg)
