@@ -1,0 +1,90 @@
+# THIS CODE IS USABLE FOR ANYONE
+# REMINDER: MAY BE BROKEN IF COPY PASTED.
+# PLS SCHOLARSHIP;)
+
+# ---------- LEADERBOARD VIEW ----------
+class LeaderboardImageView(discord.ui.View):
+    def __init__(self, top_players, page=0):
+        super().__init__(timeout=300)
+        self.top_players = top_players
+        self.page = page
+    
+    @discord.ui.button(label="◀️ Prev", style=discord.ButtonStyle.secondary)
+    async def previous(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page = max(0, self.page - 1)
+        image_bytes = await generate_leaderboard_image(self.top_players, self.page)
+        file = discord.File(io.BytesIO(image_bytes), filename="leaderboard.png")
+        embed = discord.Embed(title=f"<:your_emoji> M-COINS LEADERBOARD", color=0x2a9df4)
+        embed.set_image(url="attachment://leaderboard.png")
+        await interaction.response.edit_message(embed=embed, attachments=[file])
+    
+    @discord.ui.button(label="▶️ Next", style=discord.ButtonStyle.secondary)
+    async def next_page(self, interaction: discord.Interaction, button: discord.ui.Button):
+        self.page = min(len(self.top_players)//10, self.page + 1)
+        image_bytes = await generate_leaderboard_image(self.top_players, self.page)
+        file = discord.File(io.BytesIO(image_bytes), filename="leaderboard.png")
+        embed = discord.Embed(title=f"<:your_emoji> M-COINS LEADERBOARD", color=0x2a9df4)
+        embed.set_image(url="attachment://leaderboard.png")
+        await interaction.response.edit_message(embed=embed, attachments=[file])
+
+# UP THERE IS THE MAIN FUNCTION OF THE LEADERBOARD
+# NEXT WE WANT IT TO LOOK COOL ASF, SO GENERATED IMAGE IS THE KEY (lowkey fomo)
+
+# -----------IMAGE GENERATOR-------------
+async def generate_leaderboard_image(top_players, page=0):
+    W, H = 680, 745 # RESOLUTION
+    canvas = Image.new('RGBA', (W, H), (15, 15, 35, 255))
+    draw = ImageDraw.Draw(canvas)
+    
+    # FONTS
+    try:
+        font_rank = ImageFont.truetype(FONT_PATH, 44)
+        font_player = ImageFont.truetype(FONT_PATH, 38)
+    except:
+        font_rank = font_player = ImageFont.load_default()
+    
+    y_pos = 15 # +5 = down | -5 = up
+    spacing = 66 # just... spacing
+    
+    # LIST // 10 PER PAGE
+    start = page * 10
+    end = min(start + 10, len(top_players))
+    
+    for i in range(start, end):
+        player = top_players[i]
+        user_id, coins, member = player
+        
+        # AVATAR
+        try:
+            avatar_bytes = await fetch_avatar_bytes(member)
+            avatar = Image.open(io.BytesIO(avatar_bytes)).convert('RGBA').resize((60, 60))
+            mask = Image.new('L', (60, 60), 0)
+            ImageDraw.Draw(mask).ellipse((0, 0, 60, 60), fill=255)
+            canvas.paste(avatar, (25, y_pos+3), mask)
+        except:
+            ImageDraw.Draw(canvas).ellipse((25, y_pos+5, 95, y_pos+75), fill=(60,60,60))
+        
+        # GOLDEN HASHTAG 
+        rank_text = f"#{i+1}"
+        draw.text((115, y_pos+8), rank_text, font=font_rank, fill=(255, 215, 0, 255))
+        
+        # PLAYER TEXT
+        username = member.display_name[:18]
+        player_text = f"{username} • {coins:,}"
+        draw.text((210, y_pos+12), player_text, font=font_player, fill=(255, 255, 255, 255))
+        
+        y_pos += spacing # already defined :D
+    
+    # FOOTER - BOTTOM SNUG
+    total_pages = (len(top_players) - 1) // 10 + 1     # ↓↓↓ CHANGE TO YOUR GLOBAL FONT PATH NAME
+    footer_font = ImageFont.truetype(FONT_PATH, 28) if 'FONT_PATH' in globals() else font_player
+    draw.text((25, H-65), f"M-Coins Leaderboard | Page {page+1}/{total_pages}", 
+              font=footer_font, fill=(200, 200, 200, 255))
+    
+    output = io.BytesIO()
+    canvas.save(output, format='PNG')
+    output.seek(0)
+    return output.read()
+
+# I DON'T SHARE COMMAND, MAKE YOUR OWN!!
+# oh.. poor guy, tip: use defer, (ctx) only
