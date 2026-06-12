@@ -1,7 +1,7 @@
 # Economy-leaderboard
 Explained :
 — Leaderboard Class
-— Next and Preview page button
+— Next and Previous page button
 — Generate image
 — Pinned changeable/configuration parts
 
